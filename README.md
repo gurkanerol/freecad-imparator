@@ -1,7 +1,5 @@
 # FreeCAD Imparator 🚀
 
-> **A robust Blender addon for importing FreeCAD (.fcstd) files — preserving full assembly hierarchy, materials, hidden objects, and real-world scale.**
-
 [![Version](https://img.shields.io/badge/version-2026.5.35-blue)](https://github.com/gurkanerol/freecad-imparator/releases)
 [![Blender](https://img.shields.io/badge/Blender-4.2%2B-orange)](https://www.blender.org)
 [![FreeCAD](https://img.shields.io/badge/FreeCAD-0.21%2B-red)](https://www.freecad.org)
@@ -9,7 +7,16 @@
 
 ---
 
-## ✨ Features
+🇬🇧 [English](#english) &nbsp;|&nbsp; 🇹🇷 [Türkçe](#turkce)
+
+---
+
+<a name="english"></a>
+## 🇬🇧 English
+
+> **A robust Blender addon for importing FreeCAD (.fcstd) files — preserving full assembly hierarchy, materials, hidden objects, and real-world scale.**
+
+### ✨ Features
 
 | Feature | Description |
 |---|---|
@@ -24,20 +31,16 @@
 | 🎛 **Compact Sidebar UI** | Icon-only action buttons, Quality and Scale side-by-side in the N-Panel |
 | 📍 **Small Locators** | Pivot (Empty) display size is 0.5 — no giant axes cluttering the viewport |
 
----
-
-## 📦 Installation
+### 📦 Installation
 
 1. Download the latest `.zip` from [Releases](https://github.com/gurkanerol/freecad-imparator/releases)
 2. Open Blender → `Edit > Preferences > Add-ons`
 3. Click **Install from Disk** and select the downloaded `.zip`
 4. Enable **Import-Export: FreeCAD Imparator** from the list
 
----
+### ⚙️ Configuration (Required)
 
-## ⚙️ Configuration (Required)
-
-After enabling the addon, set your **FreeCAD executable path** in the Addon Preferences:
+Set your **FreeCAD executable path** in the Addon Preferences:
 
 | OS | Typical Path |
 |---|---|
@@ -45,38 +48,19 @@ After enabling the addon, set your **FreeCAD executable path** in the Addon Pref
 | **Windows** | `C:\Program Files\FreeCAD 0.21\bin\python.exe` |
 | **Linux** | `freecadcmd` or `/usr/lib/freecad/bin/python` |
 
-> The addon spawns FreeCAD as a headless subprocess to parse geometry. The path must point to FreeCAD's bundled Python executable.
+### 🚀 Usage
 
----
+**Via File Menu:** `File > Import > FreeCAD (.fcstd)`
 
-## 🚀 Usage
-
-**Via File Menu:**
-```
-File > Import > FreeCAD (.fcstd)
-```
-
-**Via Sidebar (N-Panel):**
-Press `N` in the 3D Viewport → open the **FreeCAD** tab
-
-### Import Options
+**Via Sidebar:** Press `N` in the 3D Viewport → open the **FreeCAD** tab
 
 | Option | Description | Default |
 |---|---|---|
-| **Quality (Deflection)** | Mesh tessellation precision in mm. Lower = smoother, heavier | `0.1` |
+| **Quality (Deflection)** | Mesh tessellation precision in mm. Lower = smoother | `0.1` |
 | **Scale** | Mapping ratio from FreeCAD mm to Blender units | `1:1000 (Real Metric)` |
 | **BMesh** | Dissolve coplanar triangles into clean N-gons | `✓ On` |
 
-### Sidebar Panel (after import)
-
-Each imported file gets its own entry with:
-- **BMesh** toggle + **Select** and **Reload** icon buttons in the top row
-- **Quality** and **Scale** selectors in the bottom row
-- **Delete** button to remove the import record
-
----
-
-## 🏗 How It Works
+### 🏗 How It Works
 
 ```
 FreeCAD (.fcstd)
@@ -90,57 +74,87 @@ FreeCAD (.fcstd)
      │   • Imports .obj mesh objects
      │   • Reads .json hierarchy descriptor
      │   • Builds Empty (Locator) tree matching FreeCAD folders
-     │   • Parents meshes to their correct containers
+     │   • Routes hidden objects → "Hidden Geometry" collection
      │   • Assigns Principled BSDF materials
-     │   • Routes hidden objects to "Hidden Geometry" collection
      │   • Auto-sets scene units to Millimeters
      ▼
 Blender Scene ✓
 ```
 
----
+### 📜 Changelog
 
-## 📋 Requirements
-
-- **Blender 4.2** or newer
-- **FreeCAD 0.21** or newer (must be installed on the system)
-
----
-
-## 🗂 Project Structure
-
-```
-freecad-imparator/
-├── freecad_imparator/
-│   ├── __init__.py          # Blender addon (UI + import logic)
-│   └── fcstd_to_obj.py      # FreeCAD headless geometry exporter
-├── releases/
-│   └── freecad_imparator_v2026.5.35.zip
-├── .gitignore
-└── README.md
-```
+**v2026.5.35** *(Latest)*
+- Hidden objects → `Hidden Geometry` collection (viewport visibility untouched)
+- Hidden object parent hierarchy preserved
+- Blender scene units auto-set to Millimeters on import
+- Scale dropdown: 1:1 / 1:10 / 1:50 / 1:100 / 1:1000
+- Compact sidebar UI with icon-only buttons
+- Path label removed from sidebar
 
 ---
 
-## 📜 Changelog
+<a name="turkce"></a>
+## 🇹🇷 Türkçe
 
-### v2026.5.35 *(Latest)*
-- ✅ Hidden objects imported into `Hidden Geometry` collection (folder visibility untouched)
-- ✅ Hidden object parent hierarchy preserved in `needed_containers`
-- ✅ Blender scene units auto-set to Millimeters on import
-- ✅ Scale dropdown: 1:1 / 1:10 / 1:50 / 1:100 / 1:1000
-- ✅ Compact sidebar UI — icon-only buttons, BMesh + actions on top row
-- ✅ Quality and Scale side-by-side on bottom row
-- ✅ Path label removed from sidebar (name already shown in header)
+> **FreeCAD (.fcstd) dosyalarını tam montaj hiyerarşisi, materyaller, gizli objeler ve gerçek dünya ölçeğiyle Blender'a aktaran güçlü bir eklenti.**
 
-### v2026.5.33–34
-- Locator display size reduced to 0.5
-- Empty group pruning (no orphan container folders)
-- Double-transformation bug fixed via `parent_gp.Matrix` approach
+### ✨ Özellikler
+
+| Özellik | Açıklama |
+|---|---|
+| 🗂 **Tam Hiyerarşi Koruması** | FreeCAD'deki klasör ve grup yapısı Blender'a Empty (Locator) objeler olarak aktarılır |
+| 📐 **Doğru Koordinatlar** | Mutlak global konumlar hesaplanır — parçalar dağılmaz veya kayaya kaçmaz |
+| 🙈 **Gizli Obje Desteği** | FreeCAD'de gizli objeler silinmez, `Hidden Geometry` koleksiyonuna alınır; görünürlük senin elinde |
+| 📏 **Ölçek Seçici** | Açılır menüden 1:1, 1:10, 1:50, 1:100 veya 1:1000 (Gerçek Metrik) seçimi |
+| 🔢 **Otomatik Sahne Birimi** | İlk import sonrası Blender sahne birimi otomatik olarak Milimetreye ayarlanır |
+| 🔵 **BMesh N-Gon Temizliği** | Aynı düzlemdeki gereksiz üçgenler eritilerek temiz N-gon yüzeyler elde edilir |
+| 🎨 **Materyal ve Şeffaflık** | FreeCAD ShapeColor değerleri otomatik olarak Principled BSDF materyallerine dönüştürülür |
+| 🔄 **Tekil Yenileme (Reload)** | Sahneyi bozmadan her dosyayı ayrı ayrı yeniden yükle |
+| 🎛 **Kompakt Sidebar** | İkon bazlı butonlar; BMesh ve işlemler üst satırda, Quality ve Scale alt satırda |
+| 📍 **Küçük Locator Boyutu** | Pivot (Empty) boyutu 0.5 — ekranı kapatan devasa eksenler yok |
+
+### 📦 Kurulum
+
+1. [Releases](https://github.com/gurkanerol/freecad-imparator/releases) sayfasından güncel `.zip` dosyasını indir
+2. Blender → `Edit > Preferences > Add-ons` yolunu izle
+3. **Install from Disk** butonuna tıkla ve indirdiğin `.zip` dosyasını seç
+4. Listeden **Import-Export: FreeCAD Imparator** eklentisini bulup aktifleştir
+
+### ⚙️ Yapılandırma (Zorunlu)
+
+Eklentiyi aktif ettikten sonra **FreeCAD çalıştırılabilir dosya yolunu** Addon Preferences içinde ayarla:
+
+| İşletim Sistemi | Tipik Yol |
+|---|---|
+| **macOS** | `/Applications/FreeCAD.app/Contents/Resources/bin/python` |
+| **Windows** | `C:\Program Files\FreeCAD 0.21\bin\python.exe` |
+| **Linux** | `freecadcmd` veya `/usr/lib/freecad/bin/python` |
+
+### 🚀 Kullanım
+
+**Dosya Menüsünden:** `File > Import > FreeCAD (.fcstd)`
+
+**Yan Menüden (Sidebar):** 3D Viewport'ta `N` tuşuna bas → **FreeCAD** sekmesine geç
+
+| Seçenek | Açıklama | Varsayılan |
+|---|---|---|
+| **Quality (Deflection)** | Yüzey kalitesi (mm). Küçüldükçe pürüzsüzlük artar | `0.1` |
+| **Scale** | FreeCAD mm → Blender birimi dönüşüm oranı | `1:1000 (Gerçek Metrik)` |
+| **BMesh** | Üçgenleri temiz N-gon yüzeylere dönüştür | `✓ Açık` |
+
+### 📜 Sürüm Notları
+
+**v2026.5.35** *(Son Sürüm)*
+- Gizli objeler → `Hidden Geometry` koleksiyonu (görünürlük ayarına dokunulmaz)
+- Gizli objelerin parent klasör hiyerarşisi korunuyor
+- Import sonrası Blender sahne birimi otomatik Milimetre oluyor
+- Scale açılır menüsü: 1:1 / 1:10 / 1:50 / 1:100 / 1:1000
+- Kompakt sidebar — ikon bazlı butonlar
+- Sidebar'dan gereksiz Path yazısı kaldırıldı
 
 ---
 
-## 👤 Author
+## 👤 Author / Geliştirici
 
 **gurkanerol** — [gurkanerol@gmail.com](mailto:gurkanerol@gmail.com)
 
