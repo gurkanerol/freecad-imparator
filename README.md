@@ -1,70 +1,149 @@
 # FreeCAD Imparator 🚀
 
-**FreeCAD Imparator**, FreeCAD (.fcstd) montaj ve parça dosyalarını, geometri hiyerarşisini, koordinatları ve materyalleri koruyarak doğrudan Blender içerisine aktarmanızı sağlayan güçlü bir Blender Eklentisidir (Addon).
+> **A robust Blender addon for importing FreeCAD (.fcstd) files — preserving full assembly hierarchy, materials, hidden objects, and real-world scale.**
 
-Bu proje, orijinal CAD dosyası içindeki "Gizli/İşlem Gören" (Intermediate) eskizleri yoksayarak yalnızca ana geometrileri (Mesh ve Part özelliklerini) akıllıca tarar, onları Blender'ın metrik ve "Z-Up" sistemine milimi milimine çevirir ve mükemmel ağ yapılarıyla (BMesh/N-Gon) sahnenize dâhil eder.
-
----
-
-## 🌟 Temel Özellikler
-
-1. **Akıllı Hiyerarşi Koruması:**
-   FreeCAD'deki karmaşık klasörleme ve gruplama (Assembly) sisteminiz Blender'a boş (Empty) objeler yardımıyla birebir aktarılır.
-
-2. **Kusursuz Koordinat Eşlemesi:**
-   Parçaların FreeCAD içerisindeki "Mutlak Global (Dünya) Koordinatları" (Absolute Global Placements) hesaplanır. Lokal (Parent) kaynaklı kaymalar/offset'ler kusursuz bir matematikle çözülerek objelerin Blender'da parçalanması/dağılması önlenir.
-
-3. **Otomatik Ölçü (Scale) ve Yön (Z-Up) Dönüşümü:**
-   FreeCAD standartlarında *Milimetre (mm)* olan ölçek, dönüşüm esnasında arka planda `0.001` ile çarpılarak Blender'ın standart *Metre (m)* ölçeğine devasa büyüme olmadan yansıtılır. Yönelim olarak standart `Y-Forward, Z-Up` eksen yapısı uygulanır.
-
-4. **BMesh ile Pürüzsüz N-Gon Yüzeyler:**
-   Çoğu CAD dönüştürücüsünün yarattığı "üçgen kirliliği" (triangulation) çözülür. Blender'a gelen parçalar BMesh modülü sayesinde açı toleranslarına göre filtrelenir; aynı düzlemdeki gereksiz üçgen bağları eritilir ve temiz (N-Gon) yapılı, yumuşatılmış pürüzsüz yüzeyler elde edilir.
-
-5. **Materyal ve Şeffaflık Desteği:**
-   Standart FreeCAD "ShapeColor" değerleri okunarak otomatik olarak `Principled BSDF` materyalleri şeklinde atanır. Şeffaflık desteklenir. (Not: İleri seviye mimari "BIM/Arch - ShapeAppearance37" gibi ikili (binary) materyaller şu anda GUI gereksinimi sebebiyle doğrudan okunamaz, ancak parça geometrileri ve konumları güvenle aktarılır).
-
-6. **Kolay Yenileme (Reload) Modülü:**
-   Blender üzerinden FreeCAD dosyanızı bir kez içeri aktardıktan sonra, FreeCAD'de yapacağınız bir değişikliği "Reload" (Yenile) butonuna tıklayarak saniyeler içinde Blender'a çekebilirsiniz. 
+[![Version](https://img.shields.io/badge/version-2026.5.35-blue)](https://github.com/gurkanerol/freecad-imparator/releases)
+[![Blender](https://img.shields.io/badge/Blender-4.2%2B-orange)](https://www.blender.org)
+[![FreeCAD](https://img.shields.io/badge/FreeCAD-0.21%2B-red)](https://www.freecad.org)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
-## 🛠 Sistem Gereksinimleri ve Bağımlılıklar
+## ✨ Features
 
-* **Blender 4.0 veya üzeri:** (Eklenti en güncel özellikler ve modern `obj_import` fonksiyonu için optimize edilmiştir).
-* **FreeCAD (0.20, 0.21 veya 0.22):** Sisteminizde kurulu olmalıdır. Dönüştürme işlemini kendi arka plan Python motorunu kullanarak yapar.
-
----
-
-## 📥 Kurulum (Installation)
-
-1. Bu deponun `releases` klasöründeki güncel `.zip` dosyasını indirin (Örn: `freecad_imparator_v2026.5.32.zip`).
-2. Blender'ı açın. `Edit > Preferences > Add-ons` yolunu izleyin.
-3. Sağ üst köşedeki aşağı bakan ok simgesine (veya **Install** butonuna) tıklayarak indirdiğiniz `.zip` dosyasını seçin.
-4. Çıkan listeden `Import-Export: FreeCAD Imparator` eklentisini bularak yanındaki kutucuğu işaretleyip aktifleştirin.
-
----
-
-## ⚙️ Yapılandırma (ÇOK ÖNEMLİ!)
-
-Eklentiyi kurup aktif ettikten hemen sonra eklentinin ayar menüsüne girmeli ve sisteminizdeki **FreeCAD çalıştırılabilir (executable)** yolunu göstermelisiniz:
-
-* **macOS için (Genellikle):** `/Applications/FreeCAD.app/Contents/Resources/bin/python` veya `/Applications/FreeCAD.app/Contents/MacOS/FreeCAD`
-* **Windows için (Genellikle):** `C:\Program Files\FreeCAD 0.21\bin\python.exe`
-* **Linux için:** `freecadcmd` veya `python3` (FreeCAD kütüphanelerine erişimi olan bir Python sürümü)
-
-> Bu yol ayarlandığında, eklenti içindeki FreeCAD Python modüllerine otomatik olarak erişim sağlayacaktır.
+| Feature | Description |
+|---|---|
+| 🗂 **Full Assembly Hierarchy** | Folders and groups from FreeCAD are reconstructed as Empty (Locator) objects in Blender |
+| 📐 **Accurate Coordinates** | Absolute global placements are computed — no broken offsets or scattered parts |
+| 🙈 **Hidden Object Support** | Objects hidden in FreeCAD are imported into a separate `Hidden Geometry` collection, untouched |
+| 📏 **Scale Selector** | Choose from 1:1, 1:10, 1:50, 1:100 or 1:1000 (Real Metric) via a clean dropdown |
+| 🔢 **Auto Scene Units** | Blender scene units are automatically set to Millimeters on first import |
+| 🔵 **BMesh N-Gon Cleanup** | Coplanar triangles are dissolved into clean flat N-gons |
+| 🎨 **Materials & Transparency** | FreeCAD ShapeColor values are mapped to Principled BSDF materials automatically |
+| 🔄 **Per-File Reload** | Reload any imported file individually without losing your Blender scene setup |
+| 🎛 **Compact Sidebar UI** | Icon-only action buttons, Quality and Scale side-by-side in the N-Panel |
+| 📍 **Small Locators** | Pivot (Empty) display size is 0.5 — no giant axes cluttering the viewport |
 
 ---
 
-## 🚀 Kullanım
+## 📦 Installation
 
-* **Dosya Menüsünden:** `File > Import > FreeCAD (.fcstd)`
-* **Yan Menüden (Sidebar):** 3D Görüntüleme ekranında (Viewport) klavyeden `N` tuşuna basın. Açılan sağ menüden **FreeCAD** sekmesine geçin.
-
-### Seçenekler
-* **Mesh Quality (Deflection):** FreeCAD parçasının yüzey kalitesidir. Değer küçüldükçe pürüzsüzlük artar ama obje ağırlaşır (Varsayılan: `0.1` mm).
-* **Clean N-Gons:** Yüzeylerdeki fazlalık üçgen çizgisini (edge) eriterek yüzeyin temiz bir çokgene dönüşmesini sağlar. Seçili kalması tavsiye edilir.
+1. Download the latest `.zip` from [Releases](https://github.com/gurkanerol/freecad-imparator/releases)
+2. Open Blender → `Edit > Preferences > Add-ons`
+3. Click **Install from Disk** and select the downloaded `.zip`
+4. Enable **Import-Export: FreeCAD Imparator** from the list
 
 ---
 
-*(gurkanerol tarafından geliştirilmiştir - 2026)*
+## ⚙️ Configuration (Required)
+
+After enabling the addon, set your **FreeCAD executable path** in the Addon Preferences:
+
+| OS | Typical Path |
+|---|---|
+| **macOS** | `/Applications/FreeCAD.app/Contents/Resources/bin/python` |
+| **Windows** | `C:\Program Files\FreeCAD 0.21\bin\python.exe` |
+| **Linux** | `freecadcmd` or `/usr/lib/freecad/bin/python` |
+
+> The addon spawns FreeCAD as a headless subprocess to parse geometry. The path must point to FreeCAD's bundled Python executable.
+
+---
+
+## 🚀 Usage
+
+**Via File Menu:**
+```
+File > Import > FreeCAD (.fcstd)
+```
+
+**Via Sidebar (N-Panel):**
+Press `N` in the 3D Viewport → open the **FreeCAD** tab
+
+### Import Options
+
+| Option | Description | Default |
+|---|---|---|
+| **Quality (Deflection)** | Mesh tessellation precision in mm. Lower = smoother, heavier | `0.1` |
+| **Scale** | Mapping ratio from FreeCAD mm to Blender units | `1:1000 (Real Metric)` |
+| **BMesh** | Dissolve coplanar triangles into clean N-gons | `✓ On` |
+
+### Sidebar Panel (after import)
+
+Each imported file gets its own entry with:
+- **BMesh** toggle + **Select** and **Reload** icon buttons in the top row
+- **Quality** and **Scale** selectors in the bottom row
+- **Delete** button to remove the import record
+
+---
+
+## 🏗 How It Works
+
+```
+FreeCAD (.fcstd)
+     │
+     ▼  [Headless subprocess: fcstd_to_obj.py]
+     │   • Parses GuiDocument.xml for visibility & colors
+     │   • Computes absolute global placements
+     │   • Exports geometry as .obj + companion .json
+     │
+     ▼  [Blender: __init__.py]
+     │   • Imports .obj mesh objects
+     │   • Reads .json hierarchy descriptor
+     │   • Builds Empty (Locator) tree matching FreeCAD folders
+     │   • Parents meshes to their correct containers
+     │   • Assigns Principled BSDF materials
+     │   • Routes hidden objects to "Hidden Geometry" collection
+     │   • Auto-sets scene units to Millimeters
+     ▼
+Blender Scene ✓
+```
+
+---
+
+## 📋 Requirements
+
+- **Blender 4.2** or newer
+- **FreeCAD 0.21** or newer (must be installed on the system)
+
+---
+
+## 🗂 Project Structure
+
+```
+freecad-imparator/
+├── freecad_imparator/
+│   ├── __init__.py          # Blender addon (UI + import logic)
+│   └── fcstd_to_obj.py      # FreeCAD headless geometry exporter
+├── releases/
+│   └── freecad_imparator_v2026.5.35.zip
+├── .gitignore
+└── README.md
+```
+
+---
+
+## 📜 Changelog
+
+### v2026.5.35 *(Latest)*
+- ✅ Hidden objects imported into `Hidden Geometry` collection (folder visibility untouched)
+- ✅ Hidden object parent hierarchy preserved in `needed_containers`
+- ✅ Blender scene units auto-set to Millimeters on import
+- ✅ Scale dropdown: 1:1 / 1:10 / 1:50 / 1:100 / 1:1000
+- ✅ Compact sidebar UI — icon-only buttons, BMesh + actions on top row
+- ✅ Quality and Scale side-by-side on bottom row
+- ✅ Path label removed from sidebar (name already shown in header)
+
+### v2026.5.33–34
+- Locator display size reduced to 0.5
+- Empty group pruning (no orphan container folders)
+- Double-transformation bug fixed via `parent_gp.Matrix` approach
+
+---
+
+## 👤 Author
+
+**gurkanerol** — [gurkanerol@gmail.com](mailto:gurkanerol@gmail.com)
+
+---
+
+*Built with ❤️ for the FreeCAD + Blender community.*
