@@ -24,7 +24,7 @@ from bpy_extras.io_utils import ImportHelper
 bl_info = {
     "name": "FreeCAD Imparator",
     "author": "gurkanerol (2026 Edition)",
-    "version": (2026, 5, 36),
+    "version": (2026, 5, 37),
     "blender": (4, 2, 0),
     "description": "Robust import of FreeCAD (.fcstd) models with individual reload, deflection control, and deep purge.",
     "category": "Import-Export",
@@ -46,6 +46,8 @@ def auto_find_freecad_path():
             "/Applications/FreeCAD.app/Contents/MacOS/FreeCADCmd",
             "/Applications/FreeCAD.app/Contents/MacOS/FreeCAD",
             # Versioned bundles in /Applications
+            "/Applications/FreeCAD 1.1.app/Contents/Resources/bin/python",
+            "/Applications/FreeCAD 1.1.1.app/Contents/Resources/bin/python",
             "/Applications/FreeCAD 1.0.app/Contents/Resources/bin/python",
             "/Applications/FreeCAD 0.22.app/Contents/Resources/bin/python",
             "/Applications/FreeCAD 0.21.app/Contents/Resources/bin/python",
@@ -99,7 +101,8 @@ def auto_find_freecad_path():
             os.environ.get("LOCALAPPDATA", ""),
         ]
         fc_subfolders = [
-            "FreeCAD", "FreeCAD 1.0", "FreeCAD 0.22", "FreeCAD 0.21", "FreeCAD 0.20",
+            "FreeCAD", "FreeCAD 1.1", "FreeCAD 1.1.1", "FreeCAD 1.0", "FreeCAD 0.22",
+            "FreeCAD 0.21", "FreeCAD 0.20",
         ]
         fc_bins = ["bin\\python.exe", "bin\\FreeCADCmd.exe"]
         for prog_dir in program_dirs:
