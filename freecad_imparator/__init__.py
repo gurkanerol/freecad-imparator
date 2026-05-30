@@ -15,6 +15,7 @@ import sys
 import time
 import tempfile
 import subprocess
+import shutil
 import bpy
 from bpy.props import StringProperty, BoolProperty, FloatProperty, CollectionProperty, IntProperty, EnumProperty
 from bpy.types import AddonPreferences, Operator, Panel, PropertyGroup
@@ -23,7 +24,7 @@ from bpy_extras.io_utils import ImportHelper
 bl_info = {
     "name": "FreeCAD Imparator",
     "author": "gurkanerol (2026 Edition)",
-    "version": (2026, 5, 35),
+    "version": (2026, 5, 36),
     "blender": (4, 2, 0),
     "description": "Robust import of FreeCAD (.fcstd) models with individual reload, deflection control, and deep purge.",
     "category": "Import-Export",
@@ -32,35 +33,126 @@ bl_info = {
 
 # --- UTILITIES ---
 
-def get_default_freecad_path():
-    """Determine a sensible default path for the FreeCAD Python/Cmd executable based on OS."""
+def auto_find_freecad_path():
+    """Try every available strategy to locate FreeCAD's Python executable automatically.
+    Returns the first valid path found, or an empty string if nothing is found."""
     plat = sys.platform
+
+    # ------------------------------------------------------------------ macOS
     if plat.startswith("darwin"):
-        # macOS typical bundle path
-        path = "/Applications/FreeCAD.app/Contents/Resources/bin/python"
-        if os.path.exists(path):
-            return path
-        # Fallback to standard app location
-        path_alt = "/Applications/FreeCAD.app/Contents/MacOS/FreeCAD"
-        if os.path.exists(path_alt):
-            return path_alt
-    elif plat.startswith("win32"):
-        # Windows typical installation paths
-        common_paths = [
-            r"C:\Program Files\FreeCAD\bin\python.exe",
-            r"C:\Program Files\FreeCAD 0.22\bin\python.exe",
-            r"C:\Program Files\FreeCAD 0.21\bin\python.exe",
-            r"C:\Program Files\FreeCAD\bin\FreeCADCmd.exe",
+        candidates = [
+            # Standard /Applications install
+            "/Applications/FreeCAD.app/Contents/Resources/bin/python",
+            "/Applications/FreeCAD.app/Contents/MacOS/FreeCADCmd",
+            "/Applications/FreeCAD.app/Contents/MacOS/FreeCAD",
+            # Versioned bundles in /Applications
+            "/Applications/FreeCAD 1.0.app/Contents/Resources/bin/python",
+            "/Applications/FreeCAD 0.22.app/Contents/Resources/bin/python",
+            "/Applications/FreeCAD 0.21.app/Contents/Resources/bin/python",
+            "/Applications/FreeCAD 0.20.app/Contents/Resources/bin/python",
+            # Homebrew Cask
+            "/opt/homebrew/Caskroom/freecad/current/FreeCAD.app/Contents/Resources/bin/python",
+            "/usr/local/Caskroom/freecad/current/FreeCAD.app/Contents/Resources/bin/python",
         ]
-        for p in common_paths:
-            if os.path.exists(p):
-                return p
+        for c in candidates:
+            if os.path.isfile(c) and os.access(c, os.X_OK):
+                return c
+
+        # Spotlight search (fast, no sudo)
+        try:
+            result = subprocess.run(
+                ["mdfind", "-name", "FreeCAD.app", "-onlyin", "/Applications"],
+                capture_output=True, text=True, timeout=5
+            )
+            for line in result.stdout.splitlines():
+                line = line.strip()
+                if line.endswith(".app") and "freecad" in line.lower():
+                    py_path = os.path.join(line, "Contents", "Resources", "bin", "python")
+                    cmd_path = os.path.join(line, "Contents", "MacOS", "FreeCADCmd")
+                    if os.path.isfile(py_path) and os.access(py_path, os.X_OK):
+                        return py_path
+                    if os.path.isfile(cmd_path) and os.access(cmd_path, os.X_OK):
+                        return cmd_path
+        except Exception:
+            pass
+
+        # Homebrew prefix detection
+        try:
+            brew_result = subprocess.run(
+                ["brew", "--prefix", "freecad"],
+                capture_output=True, text=True, timeout=5
+            )
+            if brew_result.returncode == 0:
+                prefix = brew_result.stdout.strip()
+                for sub in ["bin/python3", "bin/python", "bin/freecadcmd"]:
+                    p = os.path.join(prefix, sub)
+                    if os.path.isfile(p) and os.access(p, os.X_OK):
+                        return p
+        except Exception:
+            pass
+
+    # ----------------------------------------------------------------- Windows
+    elif plat.startswith("win"):
+        program_dirs = [
+            os.environ.get("PROGRAMFILES", r"C:\Program Files"),
+            os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)"),
+            os.environ.get("LOCALAPPDATA", ""),
+        ]
+        fc_subfolders = [
+            "FreeCAD", "FreeCAD 1.0", "FreeCAD 0.22", "FreeCAD 0.21", "FreeCAD 0.20",
+        ]
+        fc_bins = ["bin\\python.exe", "bin\\FreeCADCmd.exe"]
+        for prog_dir in program_dirs:
+            if not prog_dir:
+                continue
+            for subfolder in fc_subfolders:
+                for fc_bin in fc_bins:
+                    p = os.path.join(prog_dir, subfolder, fc_bin)
+                    if os.path.isfile(p):
+                        return p
+
+        # Windows Registry lookup
+        try:
+            import winreg
+            for hive in [winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER]:
+                try:
+                    key = winreg.OpenKey(hive, r"SOFTWARE\FreeCAD")
+                    install_dir, _ = winreg.QueryValueEx(key, "InstallPath")
+                    winreg.CloseKey(key)
+                    for fc_bin in ["bin\\python.exe", "bin\\FreeCADCmd.exe"]:
+                        p = os.path.join(install_dir, fc_bin)
+                        if os.path.isfile(p):
+                            return p
+                except Exception:
+                    pass
+        except ImportError:
+            pass
+
+    # ------------------------------------------------------------------ Linux
     else:
-        # Linux typical commands
-        for cmd in ["freecadcmd", "python3"]:
-            if shutil.which(cmd):
-                return cmd
+        for cmd in ["freecadcmd", "FreeCADCmd", "freecad-python3", "freecad"]:
+            found = shutil.which(cmd)
+            if found:
+                return found
+
+        linux_candidates = [
+            "/usr/lib/freecad/bin/FreeCADCmd",
+            "/usr/lib/freecad-python3/bin/FreeCADCmd",
+            "/usr/local/lib/freecad/bin/FreeCADCmd",
+            "/opt/freecad/bin/FreeCADCmd",
+            "/snap/freecad/current/usr/lib/freecad/bin/FreeCADCmd",
+        ]
+        for c in linux_candidates:
+            if os.path.isfile(c) and os.access(c, os.X_OK):
+                return c
+
     return ""
+
+
+def get_default_freecad_path():
+    """Return a cached/detected default FreeCAD path at import time."""
+    return auto_find_freecad_path()
+
 
 def get_freecad_lib_path(freecad_path):
     """Derive the library directory where FreeCAD.so or FreeCAD.pyd resides."""
@@ -344,21 +436,43 @@ class FreeCADAddonPreferences(AddonPreferences):
     def draw(self, context):
         layout = self.layout
         layout.label(text="- System Configuration -", icon='SETTINGS')
-        
-        box = layout.box()
-        box.prop(self, "freecad_path")
-        
-        lib_path = get_freecad_lib_path(self.freecad_path)
-        if lib_path:
-            box.label(text=f"Detected Library Directory: {lib_path}", icon='INFO')
-        else:
-            box.label(text="Could not auto-detect FreeCAD library directory. Make sure path is correct.", icon='ERROR')
 
-        # Validity warning
-        if not self.freecad_path or not os.path.exists(self.freecad_path):
-            box.label(text="Warning: FreeCAD executable path is invalid or empty!", icon='ERROR')
+        box = layout.box()
+        row = box.row(align=True)
+        row.prop(self, "freecad_path")
+        row.operator("import_scene.fcstd_auto_detect", text="", icon='VIEWZOOM')
+
+        path_valid = bool(self.freecad_path) and os.path.exists(self.freecad_path)
+
+        if path_valid:
+            lib_path = get_freecad_lib_path(self.freecad_path)
+            if lib_path:
+                box.label(text=f"\u2705  FreeCAD found. Library: {lib_path}", icon='CHECKMARK')
+            else:
+                box.label(text="\u2705  FreeCAD executable found.", icon='CHECKMARK')
+        else:
+            box.label(text="FreeCAD executable not found at the specified path.", icon='ERROR')
+            box.operator("import_scene.fcstd_auto_detect", text="Auto-Detect FreeCAD", icon='VIEWZOOM')
 
 # --- OPERATORS ---
+
+class FCSTD_OT_auto_detect(Operator):
+    """Automatically search for the FreeCAD executable on this system."""
+    bl_idname = "import_scene.fcstd_auto_detect"
+    bl_label = "Auto-Detect FreeCAD"
+    bl_description = "Search common installation paths and system tools (Spotlight, Homebrew, registry) to locate FreeCAD automatically"
+    bl_options = set()
+
+    def execute(self, context):
+        found = auto_find_freecad_path()
+        if found:
+            prefs = context.preferences.addons[__name__].preferences
+            prefs.freecad_path = found
+            self.report({'INFO'}, f"FreeCAD found: {found}")
+        else:
+            self.report({'WARNING'}, "FreeCAD could not be found automatically. Please set the path manually in Addon Preferences.")
+        return {'FINISHED'}
+
 
 class FCSTD_OT_import(Operator, ImportHelper):
     """Select and import a FreeCAD file (.fcstd)"""
@@ -877,8 +991,11 @@ class FCSTD_PT_panel(Panel):
         if not fc_bin or not os.path.exists(fc_bin):
             box = layout.box()
             box.alert = True
-            box.label(text="FreeCAD path invalid!", icon='ERROR')
-            box.label(text="Please configure in Addon Preferences.")
+            box.label(text="FreeCAD not found!", icon='ERROR')
+            row = box.row()
+            row.scale_y = 1.4
+            row.operator("import_scene.fcstd_auto_detect", text="Auto-Detect FreeCAD", icon='VIEWZOOM')
+            box.label(text="Or set path manually in Addon Preferences.", icon='INFO')
             return
 
         # Import main button (matching image styling)
@@ -951,6 +1068,7 @@ def menu_func_import(self, context):
 classes = (
     FreeCADImportItem,
     FreeCADAddonPreferences,
+    FCSTD_OT_auto_detect,
     FCSTD_OT_import,
     FCSTD_OT_reload,
     FCSTD_OT_delete,
