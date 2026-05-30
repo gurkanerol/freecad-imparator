@@ -24,7 +24,7 @@ from bpy_extras.io_utils import ImportHelper
 bl_info = {
     "name": "FreeCAD Imparator",
     "author": "gurkanerol (2026 Edition)",
-    "version": (2026, 5, 38),
+    "version": (2026, 5, 39),
     "blender": (4, 2, 0),
     "description": "Robust import of FreeCAD (.fcstd) models with individual reload, deflection control, and deep purge.",
     "category": "Import-Export",
@@ -422,7 +422,7 @@ class FreeCADImportItem(PropertyGroup):
         ],
         default="0.001"
     )
-    clean_ngons: BoolProperty(name="Clean N-Gons", default=True, description="Dissolve coplanar triangles into clean N-gons")
+
 
 # --- ADDON PREFERENCES ---
 
@@ -511,11 +511,6 @@ class FCSTD_OT_import(Operator, ImportHelper):
         default="0.001"
     )
 
-    clean_ngons: BoolProperty(
-        name="Clean N-Gons (BMesh)",
-        description="Dissolve coplanar triangles into clean flat N-gons (BMesh)",
-        default=True
-    )
 
     def execute(self, context):
         prefs = context.preferences.addons[__name__].preferences
@@ -623,10 +618,9 @@ class FCSTD_OT_import(Operator, ImportHelper):
             self.report({'WARNING'}, "Imported successfully, but no new 3D objects were found.")
             return {'FINISHED'}
 
-        # Clean up triangulation (convert to clean N-gons / BMesh)
-        if self.clean_ngons:
-            self.report({'INFO'}, "Converting geometry to clean BMesh N-gons...")
-            clean_imported_meshes(imported_obs)
+        # Always convert triangulated mesh to clean N-gons (Blender-native look)
+        self.report({'INFO'}, "Converting geometry to clean BMesh N-gons...")
+        clean_imported_meshes(imported_obs)
 
         # Create collection setup
         filename = os.path.basename(self.filepath)
@@ -674,7 +668,6 @@ class FCSTD_OT_import(Operator, ImportHelper):
         item.collection_name = coll_name
         item.deflection = self.deflection
         item.scale = self.scale
-        item.clean_ngons = self.clean_ngons
         item.import_time = time.strftime("%Y-%m-%d %H:%M:%S")
 
         # Auto-configure scene units to millimeters so values feel natural
@@ -813,10 +806,9 @@ class FCSTD_OT_reload(Operator):
         new_objects = set(bpy.data.objects.keys())
         imported_obs = [bpy.data.objects[name] for name in (new_objects - old_objects)]
 
-        # Clean up triangulation (convert to clean N-gons / BMesh)
-        if item.clean_ngons:
-            self.report({'INFO'}, "Converting geometry to clean BMesh N-gons...")
-            clean_imported_meshes(imported_obs)
+        # Always convert triangulated mesh to clean N-gons (Blender-native look)
+        self.report({'INFO'}, "Converting geometry to clean BMesh N-gons...")
+        clean_imported_meshes(imported_obs)
 
         # 3. Move newly imported objects to the target collection
         for obj in imported_obs:
@@ -1061,9 +1053,8 @@ class FCSTD_PT_panel(Panel):
                 # Controls box for reload options
                 ctrl_box = box.column(align=True)
                 
-                # Top Row: BMesh and Actions
+                # Top Row: Actions
                 row_top = ctrl_box.row(align=True)
-                row_top.prop(item, "clean_ngons", text="BMesh")
                 op_sel = row_top.operator("import_scene.fcstd_select", text="", icon='RESTRICT_SELECT_OFF')
                 op_sel.import_index = idx
                 op_rel = row_top.operator("import_scene.fcstd_reload", text="", icon='FILE_REFRESH')
