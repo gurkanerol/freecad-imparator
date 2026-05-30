@@ -24,7 +24,7 @@ from bpy_extras.io_utils import ImportHelper
 bl_info = {
     "name": "FreeCAD Imparator",
     "author": "gurkanerol (2026 Edition)",
-    "version": (2026, 5, 37),
+    "version": (2026, 5, 38),
     "blender": (4, 2, 0),
     "description": "Robust import of FreeCAD (.fcstd) models with individual reload, deflection control, and deep purge.",
     "category": "Import-Export",
@@ -539,6 +539,15 @@ class FCSTD_OT_import(Operator, ImportHelper):
             self.report({'ERROR'}, f"Exporter helper script not found at: {exporter_script}")
             return {'CANCELLED'}
 
+        # On Windows, paths with spaces (e.g. "Blender Foundation") break FreeCAD's Python
+        # Copy the script to the temp dir (guaranteed no spaces) before running
+        safe_script = os.path.join(temp_dir, "fcstd_to_obj.py")
+        try:
+            shutil.copy2(exporter_script, safe_script)
+            exporter_script = safe_script
+        except Exception as e:
+            print(f"FreeCAD Imparator | Could not copy script to temp dir, using original: {e}")
+
         # Prepare subprocess call
         cmd = [
             freecad_bin,
@@ -717,6 +726,14 @@ class FCSTD_OT_reload(Operator):
 
         addon_dir = os.path.dirname(__file__)
         exporter_script = os.path.join(addon_dir, "fcstd_to_obj.py")
+
+        # On Windows, paths with spaces break FreeCAD's Python — copy to temp dir first
+        safe_script = os.path.join(temp_dir, "fcstd_to_obj.py")
+        try:
+            shutil.copy2(exporter_script, safe_script)
+            exporter_script = safe_script
+        except Exception as e:
+            print(f"FreeCAD Imparator | Could not copy script to temp dir: {e}")
 
         cmd = [
             freecad_bin,
